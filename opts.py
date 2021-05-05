@@ -137,7 +137,7 @@ def parse_opt():
     parser.add_argument('--config', type=str, default="no_file_exists",
                     help='gpu number')
         
-    parser.add_argument('--hidden_dim', type=int, default=128,
+    parser.add_argument('--hidden_dim', type=int, default=200,
                     help='hidden_dim')     
 
     parser.add_argument('--max_seq_len', type=int, default=400,
