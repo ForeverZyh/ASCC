@@ -17,8 +17,8 @@ class AdvLSTMBI(AdvBaseModel):
         #self.bidirectional = True
 
         self.bilstm = nn.LSTM(self.embedding_out_dim, opt.hidden_dim // 2, num_layers=self.opt.lstm_layers, dropout=self.opt.keep_dropout, bidirectional=True)
-        self.hidden1 = nn.Linear(opt.hidden_dim, opt.hidden_dim)
-        self.hidden2label = nn.Linear(opt.hidden_dim, opt.label_size)
+        self.hidden1 = nn.Linear(opt.hidden_dim, opt.hidden_dim // 2)
+        self.hidden2label = nn.Linear(opt.hidden_dim // 2, opt.label_size)
         self.hidden = self.init_hidden()
         self.lsmt_reduce_by_mean = opt.__dict__.get("lstm_mean",True) 
         self.eval_adv_mode = False
@@ -51,7 +51,7 @@ class AdvLSTMBI(AdvBaseModel):
             final = torch.mean(out,1)
         else:
             final=lstm_out[-1]
-        y  = self.hidden2label(final) #64x3  #lstm_out[-1]
+        y  = self.hidden2label(self.hidden1(final)) #64x3  #lstm_out[-1]
         return y
 
 
