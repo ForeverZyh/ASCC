@@ -173,6 +173,13 @@ def train(opt,train_iter, dev_iter, test_iter, syn_data, verbose=True):
             text_like_syn_valid= batch[7].to(device)
 
             bs, sent_len = text.shape
+            lengths = []
+            for s in text:
+                length = sent_len
+                while length > 0 and s[length - 1].item() == 0:
+                    length -= 1
+                lengths.append(length)
+            lengths = torch.Tensor(lengths)
 
             model.train()
             
@@ -229,13 +236,13 @@ def train(opt,train_iter, dev_iter, test_iter, syn_data, verbose=True):
 
             optimizer.zero_grad()
             # clean loss
-            predicted = model(mode="text_to_logit", input=text)
+            predicted = model(mode="text_to_logit", input=text, lengths=lengths)
             loss_clean= loss_fun(predicted,label)
             # adv loss
             if opt.pert_set=="ad_text" or opt.pert_set=="ad_text_hotflip":
                 predicted_adv = model(mode="text_to_logit", input=text_adv)
             elif opt.pert_set=="ad_text_syn_p":
-                predicted_adv = model(mode="text_syn_p_to_logit", input=text_like_syn, comb_p=adv_comb_p)
+                predicted_adv = model(mode="text_syn_p_to_logit", input=text_like_syn, comb_p=adv_comb_p, lengths=lengths)
             elif opt.pert_set=="l2_ball":
                 predicted_adv = model(mode="embd_to_logit", input=embd_adv)
 
