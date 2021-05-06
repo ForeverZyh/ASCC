@@ -672,7 +672,7 @@ class AdvBaseModel(BaseModel):
         x = self.embedding(inp)
         if self.opt.embd_transform:
             x = self.linear_transform_embd_1(x)
-            #x = F.relu(x)
+            x = F.relu(x)
             #x = self.linear_transform_embd_2(x)
             #x = F.relu(x)
             #x = self.linear_transform_embd_3(x)

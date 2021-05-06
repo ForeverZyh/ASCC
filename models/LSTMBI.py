@@ -51,7 +51,7 @@ class AdvLSTMBI(AdvBaseModel):
             final = torch.mean(out,1)
         else:
             final=lstm_out[-1]
-        y  = self.hidden2label(self.hidden1(final)) #64x3  #lstm_out[-1]
+        y  = self.hidden2label(F.relu(self.hidden1(final))) #64x3  #lstm_out[-1]
         return y
 
 
