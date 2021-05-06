@@ -262,7 +262,7 @@ class AdvBaseModel(BaseModel):
 
         return pert*ratio
 
-    def get_adv_by_convex_syn(self, embd, y, syn, syn_valid, text_like_syn, attack_type_dict, text_for_vis, record_for_vis):
+    def get_adv_by_convex_syn(self, embd, y, syn, syn_valid, text_like_syn, attack_type_dict, text_for_vis, record_for_vis, lengths=None, masks=None):
         
         # record context
         self_training_context = self.training
@@ -308,7 +308,7 @@ class AdvBaseModel(BaseModel):
 
         embd_ori=embd.detach()
         with torch.no_grad():
-            logit_ori = self.embd_to_logit(embd_ori)
+            logit_ori = self.embd_to_logit(embd_ori, lengths, masks)
 
         for _ in range(num_steps):
             optimizer.zero_grad()
@@ -317,10 +317,10 @@ class AdvBaseModel(BaseModel):
                 #comb_p = get_comb_p(w, syn_valid)
                 embd_adv = get_comb(F.softmax(ww, -2), syn)
                 if loss_func=='ce':
-                    logit_adv = self.embd_to_logit(embd_adv)
+                    logit_adv = self.embd_to_logit(embd_adv, lengths, masks)
                     loss = -F.cross_entropy(logit_adv, y, reduction='sum')
                 elif loss_func=='kl':
-                    logit_adv = self.embd_to_logit(embd_adv)
+                    logit_adv = self.embd_to_logit(embd_adv, lengths, masks)
                     criterion_kl = nn.KLDivLoss(reduction="sum")
                     loss = -criterion_kl(F.log_softmax(logit_adv, dim=1),
                                         F.softmax(logit_ori.detach(), dim=1))

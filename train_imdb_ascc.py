@@ -212,7 +212,7 @@ def train(opt,train_iter, dev_iter, test_iter, syn_data, verbose=True):
                 embd = model(mode="text_to_embd", input=text) #in bs, len sent, vocab
                 n,l,s = text_like_syn.shape
                 text_like_syn_embd = model(mode="text_to_embd", input=text_like_syn.reshape(n,l*s)).reshape(n,l,s,-1)
-                adv_comb_p = model(mode="get_adv_by_convex_syn", input=embd, label=label, text_like_syn_embd=text_like_syn_embd, text_like_syn_valid=text_like_syn_valid, attack_type_dict=attack_type_dict)
+                adv_comb_p = model(mode="get_adv_by_convex_syn", input=embd, label=label, text_like_syn_embd=text_like_syn_embd, text_like_syn_valid=text_like_syn_valid, attack_type_dict=attack_type_dict, lengths=lengths, masks=masks)
 
             elif opt.pert_set=="ad_text_hotflip":
                 attack_type_dict = {
