@@ -174,12 +174,14 @@ def train(opt,train_iter, dev_iter, test_iter, syn_data, verbose=True):
 
             bs, sent_len = text.shape
             lengths = []
-            for s in text:
+            masks = torch.ones_like(text)
+            for i, s in enumerate(text):
                 length = sent_len
                 while length > 0 and s[length - 1].item() == 0:
+                    masks[i, length - 1] = 0
                     length -= 1
                 lengths.append(length)
-            lengths = torch.Tensor(lengths)
+            lengths = torch.Tensor(lengths).to(device)
 
             model.train()
             
@@ -236,13 +238,14 @@ def train(opt,train_iter, dev_iter, test_iter, syn_data, verbose=True):
 
             optimizer.zero_grad()
             # clean loss
-            predicted = model(mode="text_to_logit", input=text, lengths=lengths)
+            predicted = model(mode="text_to_logit", input=text, lengths=lengths, masks=masks)
             loss_clean= loss_fun(predicted,label)
             # adv loss
             if opt.pert_set=="ad_text" or opt.pert_set=="ad_text_hotflip":
                 predicted_adv = model(mode="text_to_logit", input=text_adv)
             elif opt.pert_set=="ad_text_syn_p":
-                predicted_adv = model(mode="text_syn_p_to_logit", input=text_like_syn, comb_p=adv_comb_p, lengths=lengths)
+                predicted_adv = model(mode="text_syn_p_to_logit", input=text_like_syn, comb_p=adv_comb_p,
+                                      lengths=lengths, masks=masks)
             elif opt.pert_set=="l2_ball":
                 predicted_adv = model(mode="embd_to_logit", input=embd_adv)
 
@@ -266,7 +269,7 @@ def train(opt,train_iter, dev_iter, test_iter, syn_data, verbose=True):
             precision_adv=(idx==label).float().mean().item()
             total += 1
 
-            out_log = "%d epoch %d iters: loss: %.3f, loss_kl: %.3f, loss_adv: %.3f, loss_clean: %.3f | acc: %.3f acc_adv: %.3f | in %.3f seconds" % (epoch, iters, sum_loss/total, sum_loss_kl/total, sum_loss_adv/total, sum_loss_clean/total, precision, precision_adv, time.time()-start)
+            out_log = "%d epoch %d iters: loss: %.3f, loss_kl: %.3f, loss_adv: %.3f, loss_clean: %.3f | acc: %.3f acc_adv: %.3f | in %.3f seconds | avg length %f" % (epoch, iters, sum_loss/total, sum_loss_kl/total, sum_loss_adv/total, sum_loss_clean/total, precision, precision_adv, time.time()-start, sum(lengths) / bs)
             start= time.time()
             print(out_log)
                 

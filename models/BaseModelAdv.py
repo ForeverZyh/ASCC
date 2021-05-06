@@ -678,7 +678,7 @@ class AdvBaseModel(BaseModel):
             #x = self.linear_transform_embd_3(x)
         return x
 
-    def forward(self, mode, input, comb_p = None, label=None, text_like_syn_embd=None, text_like_syn_valid=None, text_like_syn=None, attack_type_dict=None, text_for_vis=None, record_for_vis=None, lengths=None):
+    def forward(self, mode, input, comb_p = None, label=None, text_like_syn_embd=None, text_like_syn_valid=None, text_like_syn=None, attack_type_dict=None, text_for_vis=None, record_for_vis=None, lengths=None, masks=None):
         if mode == "get_embd_adv":
             assert(attack_type_dict is not None)
             out = self.get_embd_adv(input, label, attack_type_dict)
@@ -688,7 +688,7 @@ class AdvBaseModel(BaseModel):
             assert(text_like_syn_valid is not None)
             out = self.get_adv_by_convex_syn(input, label, text_like_syn_embd, text_like_syn_valid, text_like_syn, attack_type_dict, text_for_vis, record_for_vis)
         if mode == "embd_to_logit":
-            out = self.embd_to_logit(input, lengths)
+            out = self.embd_to_logit(input, lengths, masks)
         if mode == "text_to_embd":
             out = self.text_to_embd(input)
         if mode == "text_to_radius":
@@ -696,13 +696,13 @@ class AdvBaseModel(BaseModel):
         if mode == "text_to_logit":
             embd = self.text_to_embd(input)
             #embd = self.embd_to_embdnew(embd)
-            out = self.embd_to_logit(embd, lengths)
+            out = self.embd_to_logit(embd, lengths, masks)
         if mode == "text_syn_p_to_logit":
             assert(comb_p is not None)
             bs, tl, sl = input.shape
             text_like_syn_embd = self.text_to_embd(input.reshape(bs, tl*sl)).reshape(bs, tl, sl, -1)
             embd = (comb_p*text_like_syn_embd).sum(-2)
-            out = self.embd_to_logit(embd, lengths)
+            out = self.embd_to_logit(embd, lengths, masks)
         if mode == "embd_to_embdnew":
             out = self.embd_to_embdnew(input)
         if mode == "embd_to_text":

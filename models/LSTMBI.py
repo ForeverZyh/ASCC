@@ -42,13 +42,13 @@ class AdvLSTMBI(AdvBaseModel):
             c0 = Variable(torch.zeros(2*self.opt.lstm_layers, batch_size, self.opt.hidden_dim // 2))
         return (h0, c0)
 
-    def embd_to_logit(self, embd, lengths):
+    def embd_to_logit(self, embd, lengths, masks):
         x=embd.permute(1,0,2)  # we do this because the default parameter of lstm is False 
         self.hidden= self.init_hidden(embd.size()[0]) #2x64x64
         lstm_out, self.hidden = self.bilstm(x, self.hidden)  #lstm_out:200x64x128
         if self.lsmt_reduce_by_mean=="mean":
             out = lstm_out.permute(1,0,2)
-            final = torch.sum(out,1) / lengths.unsqueeze(0)
+            final = torch.sum(out * masks.unsqueeze(-1), 1) / lengths.unsqueeze(0)
         else:
             final=lstm_out[-1]
         y  = self.hidden2label(F.relu(self.hidden1(final))) #64x3  #lstm_out[-1]
