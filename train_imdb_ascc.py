@@ -173,15 +173,7 @@ def train(opt,train_iter, dev_iter, test_iter, syn_data, verbose=True):
             text_like_syn_valid= batch[7].to(device)
 
             bs, sent_len = text.shape
-            lengths = []
-            masks = torch.ones_like(text)
-            for i, s in enumerate(text):
-                length = sent_len
-                while length > 0 and s[length - 1].item() == 0:
-                    masks[i, length - 1] = 0
-                    length -= 1
-                lengths.append(length)
-            lengths = torch.Tensor(lengths).to(device)
+            lengths, masks = utils.get_lengths_masks(text)
 
             model.train()
             

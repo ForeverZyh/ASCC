@@ -686,7 +686,7 @@ class AdvBaseModel(BaseModel):
             assert(attack_type_dict is not None)
             assert(text_like_syn_embd is not None)
             assert(text_like_syn_valid is not None)
-            out = self.get_adv_by_convex_syn(input, label, text_like_syn_embd, text_like_syn_valid, text_like_syn, attack_type_dict, text_for_vis, record_for_vis)
+            out = self.get_adv_by_convex_syn(input, label, text_like_syn_embd, text_like_syn_valid, text_like_syn, attack_type_dict, text_for_vis, record_for_vis, lengths=lengths, masks=masks)
         if mode == "embd_to_logit":
             out = self.embd_to_logit(input, lengths, masks)
         if mode == "text_to_embd":

@@ -48,7 +48,7 @@ class AdvLSTMBI(AdvBaseModel):
         lstm_out, self.hidden = self.bilstm(x, self.hidden)  #lstm_out:200x64x128
         if self.lsmt_reduce_by_mean=="mean":
             out = lstm_out.permute(1,0,2)
-            final = torch.sum(out * masks.unsqueeze(-1), 1) / lengths.unsqueeze(0)
+            final = torch.sum(out * masks.unsqueeze(-1), 1) / lengths.unsqueeze(-1)
         else:
             final=lstm_out[-1]
         y  = self.hidden2label(F.relu(self.hidden1(final))) #64x3  #lstm_out[-1]

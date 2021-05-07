@@ -14,6 +14,18 @@ try:
     import cPickle as pickle
 except ImportError:
     import pickle
+    
+def get_lengths_masks(text):
+    lengths = []
+    masks = torch.ones_like(text)
+    for i, s in enumerate(text):
+        length = text.shape[1]
+        while length > 0 and s[length - 1].item() == 0:
+            masks[i, length - 1] = 0
+            length -= 1
+        lengths.append(length)
+    lengths = torch.Tensor(lengths).to(text.device)
+    return lengths, masks
 
 def log_time_delta(func):
     @wraps(func)
@@ -67,9 +79,10 @@ def imdb_evaluation(opt, device, model,test_iter):
 #    batch= next(iter(test_iter))
     for index,batch in enumerate( test_iter):
         text = batch[0].to(device)
+        lengths, masks = get_lengths_masks(text)
         label = batch[1].to(device)
 
-        predicted = model(mode='text_to_logit',input=text)
+        predicted = model(mode='text_to_logit',input=text, lengths=lengths, masks=masks)
         prob, idx = torch.max(predicted, 1) 
         percision=(idx==label).float().mean()
         
@@ -173,6 +186,7 @@ def imdb_evaluation_ascc_attack(opt, device, model, test_iter, tokenizer):
         print("ad test by convex_combination.")
     for index,batch in enumerate( test_iter):
         text = batch[0].to(device)
+        lengths, masks = get_lengths_masks(text)
         label = batch[1].to(device)
         text_like_syn= batch[6].to(device)
         text_like_syn_valid= batch[7].to(device)
@@ -189,8 +203,8 @@ def imdb_evaluation_ascc_attack(opt, device, model, test_iter, tokenizer):
         embd = model(mode="text_to_embd", input=text) #in bs, len sent, vocab
         n,l,s = text_like_syn.shape
         text_like_syn_embd = model(mode="text_to_embd", input=text_like_syn.reshape(n,l*s)).reshape(n,l,s,-1)
-        text_adv = model(mode="get_adv_by_convex_syn", input=embd, label=label, text_like_syn_embd=text_like_syn_embd, text_like_syn_valid=text_like_syn_valid, text_like_syn=text_like_syn, attack_type_dict=attack_type_dict, text_for_vis=text, record_for_vis=record_for_vis)
-        predicted_adv = model(mode="text_to_logit", input=text_adv)
+        text_adv = model(mode="get_adv_by_convex_syn", input=embd, label=label, text_like_syn_embd=text_like_syn_embd, text_like_syn_valid=text_like_syn_valid, text_like_syn=text_like_syn, attack_type_dict=attack_type_dict, text_for_vis=text, record_for_vis=record_for_vis, lengths=lengths, masks=masks)
+        predicted_adv = model(mode="text_to_logit", input=text_adv, lengths=lengths, masks=masks)
 
 
         prob, idx = torch.max(predicted_adv, 1) 
